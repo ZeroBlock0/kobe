@@ -1,6 +1,6 @@
 /**
  * Pages Function: 从 R2 流式返回视频（支持拖动 + 跨域）
- * @see https://developers.cloudflare.com/pages/functions/api-reference/
+ * 支持 Range 请求，正确设置 CORS 与 Vary 头
  */
 export async function onRequestGet(context) {
     const { env, request } = context;
@@ -13,14 +13,20 @@ export async function onRequestGet(context) {
             return new Response('视频未找到', { status: 404 });
         }
 
-        // 检查 object.body 是否存在
         if (!object.body) {
             return new Response('视频内容为空', { status: 500 });
         }
 
-        // === 设置 CORS ===
+        // === 设置响应头 ===
         const headers = new Headers();
 
+        // 写入 R2 元数据（如 content-type）
+        object.writeHttpMetadata(headers);
+        headers.set('content-type', 'video/mp4'); // 确保类型正确
+        headers.set('cache-control', 'public, max-age=31536000, immutable');
+        headers.set('accept-ranges', 'bytes');
+
+        // === 跨域 CORS 设置 ===
         const allowedOrigins = [
             'https://docker3.acgfans.online',
             'https://cf-workers-docker-io-emi.pages.dev',
@@ -29,20 +35,20 @@ export async function onRequestGet(context) {
 
         const requestOrigin = request.headers.get('Origin');
 
-        // 只有匹配的域名才设置 Access-Control-Allow-Origin
+        // 只有匹配的域名才返回 Access-Control-Allow-Origin
         if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
             headers.set('Access-Control-Allow-Origin', requestOrigin);
         }
 
-        // 必须设置 Vary: Origin，避免 CDN 缓存污染
-        headers.set('Vary', 'Origin');
+        // === 关键：确保 Vary 包含 Origin，防止 CDN 缓存污染 ===
+        const existingVary = headers.get('Vary') || '';
+        const varyParts = existingVary.split(',').map(s => s.trim());
+        if (!varyParts.includes('Origin')) {
+            varyParts.push('Origin');
+        }
+        headers.set('Vary', varyParts.filter(Boolean).join(', '));
 
-        // === 基础响应头 ===
-        object.writeHttpMetadata(headers);
-        headers.set('content-type', 'video/mp4');
-        headers.set('cache-control', 'public, max-age=31536000, immutable');
-        headers.set('accept-ranges', 'bytes');
-
+        // === 处理 Range 请求（支持拖动）===
         const range = request.headers.get('range');
         const fileSize = object.size;
         const total = fileSize - 1;
@@ -55,7 +61,7 @@ export async function onRequestGet(context) {
             });
         }
 
-        // 解析 Range
+        // 解析 Range: bytes=0-1023
         const parts = range.replace(/bytes=/, '').split('-');
         const start = parseInt(parts[0], 10);
         const end = parts[1] ? parseInt(parts[1], 10) : total;
@@ -80,12 +86,10 @@ export async function onRequestGet(context) {
         headers.set('content-range', `bytes ${start}-${end}/${fileSize}`);
         headers.set('content-length', chunkSize.toString());
 
-        // 创建 TransformStream 流式处理
+        // === 流式传输：从 R2 读取并截取指定字节 ===
         const { readable, writable } = new TransformStream({
             transform(chunk, controller) {
                 const buffer = chunk;
-                const bytesSentSoFar = controller.desiredSize ? 0 : /* 实际已发送量 */ 0;
-                // 简化逻辑：直接计算当前 chunk 的有效部分
                 const chunkStart = Math.max(0, start - bytesSent);
                 const chunkEnd = Math.min(buffer.byteLength, end - bytesSent + 1);
 
@@ -102,7 +106,7 @@ export async function onRequestGet(context) {
         });
 
         let bytesSent = 0;
-        object.body.pipeTo(writable); // 将 R2 流写入 TransformStream
+        object.body.pipeTo(writable);
 
         return new Response(readable, {
             status: 206,
