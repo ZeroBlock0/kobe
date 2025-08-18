@@ -35,7 +35,7 @@ export async function onRequestGet(context) {
             headers.set('status', '206');
 
             // 使用正确的 TransformStream 实现
-            const transformStream = new TransformStream(new PipeRangeTransformer(start, end));
+            const transformStream = new TransformStream(createPipeRangeTransformer(start, end));
             const body = object.body?.pipeThrough(transformStream);
 
             return new Response(body, {
@@ -54,29 +54,27 @@ export async function onRequestGet(context) {
     }
 }
 
-// 正确的 TransformStream 实现
-class PipeRangeTransformer {
-    constructor(start, end) {
-        this.start = start;
-        this.end = end;
-        this.bytesSent = 0;
-    }
+// 创建 transformer 对象的函数
+function createPipeRangeTransformer(start, end) {
+    let bytesSent = 0;
 
-    transform(chunk, controller) {
-        const buffer = chunk;
-        const start = this.bytesSent < this.start ? this.start - this.bytesSent : 0;
-        const availableBytes = buffer.byteLength;
-        const maxBytesToTake = this.end - this.start + 1 - this.bytesSent;
-        const end = Math.min(start + maxBytesToTake, availableBytes);
+    return {
+        transform(chunk, controller) {
+            const buffer = chunk;
+            const chunkStart = bytesSent < start ? start - bytesSent : 0;
+            const availableBytes = buffer.byteLength;
+            const maxBytesToTake = end - start + 1 - bytesSent;
+            const chunkEnd = Math.min(chunkStart + maxBytesToTake, availableBytes);
 
-        if (end > start) {
-            controller.enqueue(buffer.slice(start, end));
+            if (chunkEnd > chunkStart) {
+                controller.enqueue(buffer.slice(chunkStart, chunkEnd));
+            }
+
+            bytesSent += availableBytes;
+
+            if (bytesSent > end) {
+                controller.terminate();
+            }
         }
-
-        this.bytesSent += availableBytes;
-
-        if (this.bytesSent > this.end) {
-            controller.terminate();
-        }
-    }
+    };
 }
