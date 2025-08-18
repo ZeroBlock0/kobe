@@ -337,6 +337,17 @@
                     soundButton.innerHTML = '🔊';
                     soundButton.setAttribute('aria-label', '关闭声音');
                 }
+                
+                // 确保按钮状态与实际播放状态同步
+                if (!video.muted && !soundOn) {
+                    soundOn = true;
+                    soundButton.innerHTML = '🔊';
+                    soundButton.setAttribute('aria-label', '关闭声音');
+                } else if (video.muted && soundOn) {
+                    soundOn = false;
+                    soundButton.innerHTML = '🔇';
+                    soundButton.setAttribute('aria-label', '开启声音');
+                }
 
             } catch (err) {
                 console.warn('自动播放被阻止:', err);
@@ -379,6 +390,12 @@
             } else {
                 // 未播放时点击，尝试播放
                 tryPlay();
+                // 确保在播放开始后同步更新声音按钮状态
+                if (isPlaying && !soundOn && !video.muted) {
+                    soundOn = true;
+                    soundButton.innerHTML = '🔊';
+                    soundButton.setAttribute('aria-label', '关闭声音');
+                }
             }
         });
 
