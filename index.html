@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kobe Tribute</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        video {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+        }
+
+        /* 声音按钮样式 */
+        #soundButton {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        #soundButton:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        /* 提示文字 */
+        .hint {
+            position: absolute;
+            bottom: 20px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            opacity: 0.8;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+
+        @keyframes fadeInOut {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 视频：自动播放、循环、静音、内联 -->
+    <video id="kobeVideo" autoplay loop muted playsinline>
+        <source src="https://storage.acgfans.online/kobe.mp4" type="video/mp4" />
+        您的浏览器不支持视频播放。
+    </video>
+
+    <!-- 声音按钮 -->
+    <button id="soundButton" aria-label="开启声音">
+        🔇
+    </button>
+
+    <!-- 提示文字 -->
+    <div class="hint">点击右上角按钮开启声音</div>
+
+    <script>
+        const video = document.getElementById('kobeVideo');
+        const soundButton = document.getElementById('soundButton');
+        let soundOn = false;
+
+        // 点击按钮切换声音
+        soundButton.addEventListener('click', function () {
+            if (!soundOn) {
+                video.muted = false; // 开启声音
+                soundButton.innerHTML = '🔊'; // 改为喇叭图标
+                soundButton.setAttribute('aria-label', '关闭声音');
+                soundOn = true;
+            } else {
+                video.muted = true; // 关闭声音
+                soundButton.innerHTML = '🔇'; // 改为静音图标
+                soundButton.setAttribute('aria-label', '开启声音');
+                soundOn = false;
+            }
+        });
+
+        // 可选：点击视频也可以切换声音
+        video.addEventListener('click', function () {
+            soundButton.click();
+        });
+    </script>
+</body>
+
+</html>
