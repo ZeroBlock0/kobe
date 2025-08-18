@@ -39,6 +39,9 @@ export async function onRequestGet(context) {
         // 只有匹配的域名才返回 Access-Control-Allow-Origin
         if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
             headers.set('Access-Control-Allow-Origin', requestOrigin);
+        } else if (!requestOrigin) {
+            // 如果没有 Origin 头，允许所有域访问
+            headers.set('Access-Control-Allow-Origin', '*');
         }
 
         // === 关键：确保 Vary 包含 Origin，防止 CDN 缓存污染 ===
