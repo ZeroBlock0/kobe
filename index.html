@@ -3,38 +3,44 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🫡Kobe Tribute🫡</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Kobe Tribute</title>
     <style>
-        body,
-        html {
+        * {
             margin: 0;
             padding: 0;
-            height: 100%;
+        }
+
+        body,
+        html {
             width: 100%;
+            height: 100%;
             overflow: hidden;
             background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
+            touch-action: manipulation;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             max-width: 100%;
             max-height: 100%;
             width: auto;
             height: auto;
+            /* 防止iOS Safari自动全屏 */
+            object-fit: contain;
         }
 
-        /* 声音按钮样式 */
         #soundButton {
             position: absolute;
-            top: 20px;
+            top: 30px;
             right: 20px;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             color: white;
-            border: 2px solid white;
+            border: 2px solid rgba(255, 255, 255, 0.8);
             border-radius: 50%;
             width: 60px;
             height: 60px;
@@ -43,78 +49,141 @@
             align-items: center;
             font-size: 24px;
             cursor: pointer;
-            z-index: 100;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             transition: all 0.3s ease;
         }
 
-        #soundButton:hover {
-            background: rgba(255, 255, 255, 0.3);
+        #soundButton:hover,
+        #soundButton:active {
             transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
         }
 
-        /* 提示文字 */
         .hint {
             position: absolute;
-            bottom: 20px;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
             color: white;
-            font-family: Arial, sans-serif;
-            font-size: 18px;
+            font-size: 16px;
             opacity: 0.8;
             animation: fadeInOut 2s ease-in-out infinite;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
         }
 
         @keyframes fadeInOut {
 
             0%,
             100% {
-                opacity: 0.3;
+                opacity: 0.4;
             }
 
             50% {
-                opacity: 0.8;
+                opacity: 0.9;
             }
+        }
+
+        /* 全屏提示（可选） */
+        .tap-hint {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .tap-hint.show {
+            opacity: 1;
         }
     </style>
 </head>
 
 <body>
-    <!-- 视频：自动播放、循环、静音、内联 -->
-    <video id="kobeVideo" autoplay loop muted playsinline>
+    <video id="kobeVideo" playsinline>
+        <!-- 注意：去掉了 autoplay muted，我们通过JS控制 -->
         <source src="https://storage.acgfans.online/kobe.mp4" type="video/mp4" />
         您的浏览器不支持视频播放。
     </video>
 
-    <!-- 声音按钮 -->
-    <button id="soundButton" aria-label="开启声音">
-        🔇
-    </button>
-
-    <!-- 提示文字 -->
+    <button id="soundButton" aria-label="开启声音">🔇</button>
     <div class="hint">点击右上角按钮开启声音</div>
+    <div class="tap-hint" id="tapHint">轻触屏幕开始播放</div>
 
     <script>
         const video = document.getElementById('kobeVideo');
         const soundButton = document.getElementById('soundButton');
+        const tapHint = document.getElementById('tapHint');
+        let isPlaying = false;
         let soundOn = false;
 
-        // 点击按钮切换声音
-        soundButton.addEventListener('click', function () {
+        // ========== 核心：移动端自动播放兼容 ==========
+        const tryPlay = async () => {
+            if (isPlaying) return;
+            try {
+                // 先尝试播放（即使没有声音）
+                await video.play();
+                isPlaying = true;
+                tapHint.classList.remove('show');
+                console.log('视频已播放');
+            } catch (err) {
+                // 播放失败（通常是因为用户未交互）
+                console.warn('自动播放被阻止:', err);
+                tapHint.classList.add('show'); // 显示提示
+            }
+        };
+
+        // 页面加载时尝试自动播放
+        window.addEventListener('load', tryPlay);
+        // 任何用户交互都尝试播放
+        ['touchstart', 'click', 'scroll', 'keydown'].forEach(event => {
+            document.addEventListener(event, tryPlay, { once: true, passive: true });
+        });
+
+        // ========== 声音控制 ==========
+        soundButton.addEventListener('click', async function () {
+            // 如果还没开始播放，先尝试播放
+            if (!isPlaying) {
+                await tryPlay();
+            }
+
             if (!soundOn) {
-                video.muted = false; // 开启声音
-                soundButton.innerHTML = '🔊'; // 改为喇叭图标
+                video.muted = false;
+                soundButton.innerHTML = '🔊';
                 soundButton.setAttribute('aria-label', '关闭声音');
                 soundOn = true;
             } else {
-                video.muted = true; // 关闭声音
-                soundButton.innerHTML = '🔇'; // 改为静音图标
+                video.muted = true;
+                soundButton.innerHTML = '🔇';
                 soundButton.setAttribute('aria-label', '开启声音');
                 soundOn = false;
             }
         });
 
-        // 可选：点击视频也可以切换声音
-        video.addEventListener('click', function () {
-            soundButton.click();
+        // 点击视频也尝试开启声音
+        video.addEventListener('click', () => {
+            if (isPlaying) {
+                soundButton.click();
+            } else {
+                tryPlay();
+            }
+        });
+
+        // 视频播放结束后循环
+        video.addEventListener('ended', () => {
+            video.currentTime = 0;
+            video.play().catch(e => console.log('循环播放失败:', e));
         });
     </script>
 </body>
