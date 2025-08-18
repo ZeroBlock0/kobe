@@ -34,9 +34,10 @@ export async function onRequestGet(context) {
             headers.set('content-length', chunk);
             headers.set('status', '206');
 
-            const body = object.body?.pipeThrough(
-                new PipeRangeIterator(start, end)
-            );
+            // 使用正确的 TransformStream 实现
+            const transformStream = new TransformStream(new PipeRangeTransformer(start, end));
+            const body = object.body?.pipeThrough(transformStream);
+
             return new Response(body, {
                 status: 206,
                 headers
@@ -53,32 +54,29 @@ export async function onRequestGet(context) {
     }
 }
 
-// 辅助类：处理 Range 请求的流式切割
-class PipeRangeIterator {
+// 正确的 TransformStream 实现
+class PipeRangeTransformer {
     constructor(start, end) {
         this.start = start;
         this.end = end;
-    }
-
-    start(controller) {
         this.bytesSent = 0;
     }
 
     transform(chunk, controller) {
         const buffer = chunk;
         const start = this.bytesSent < this.start ? this.start - this.bytesSent : 0;
-        const end = start + buffer.length > (this.end - this.start + 1)
-            ? (this.end - this.start + 1) - start
-            : buffer.length;
+        const availableBytes = buffer.byteLength;
+        const maxBytesToTake = this.end - this.start + 1 - this.bytesSent;
+        const end = Math.min(start + maxBytesToTake, availableBytes);
 
         if (end > start) {
             controller.enqueue(buffer.slice(start, end));
         }
 
-        this.bytesSent += buffer.length;
+        this.bytesSent += availableBytes;
 
         if (this.bytesSent > this.end) {
-            controller.close();
+            controller.terminate();
         }
     }
 }
