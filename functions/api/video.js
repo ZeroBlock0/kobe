@@ -30,8 +30,7 @@ export async function onRequestGet(context) {
         const allowedOrigins = [
             'https://docker3.acgfans.online',
             'https://cf-workers-docker-io-emi.pages.dev',
-            'https://kobe.acgfans.online',
-            'https://docker4.acgfans.online'
+            'https://kobe.acgfans.online'
         ];
 
         const requestOrigin = request.headers.get('Origin');
