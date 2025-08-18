@@ -414,6 +414,7 @@
 
         // 初始化位置（避免遮挡按钮）
         function setInitialPosition() {
+            if (!flyingTribute) return;
             const rect = flyingTribute.getBoundingClientRect();
             let left = Math.random() * (window.innerWidth - rect.width);
             let top = Math.random() * (window.innerHeight - rect.height);
@@ -430,6 +431,7 @@
 
         // 移动 + 碰撞检测
         function moveTribute() {
+            if (!flyingTribute) return;
             const rect = flyingTribute.getBoundingClientRect();
             let left = parseFloat(flyingTribute.style.left);
             let top = parseFloat(flyingTribute.style.top);
@@ -456,18 +458,20 @@
         }
 
         // 点击关闭
-        closeTribute.addEventListener('click', () => {
-            flyingTribute.classList.remove('show');
-            setTimeout(() => {
-                if (animationId) cancelAnimationFrame(animationId);
-            }, 300);
-        });
+        if (closeTribute) {
+            closeTribute.addEventListener('click', () => {
+                if (flyingTribute) flyingTribute.classList.remove('show');
+                setTimeout(() => {
+                    if (animationId) cancelAnimationFrame(animationId);
+                }, 300);
+            });
+        }
 
         // 页面加载完成后延迟显示
         window.addEventListener('load', () => {
             setTimeout(() => {
                 setInitialPosition();
-                flyingTribute.classList.add('show');
+                if (flyingTribute) flyingTribute.classList.add('show');
                 moveTribute();
             }, 3000); // 3秒后出现，不打扰初始体验
         });
