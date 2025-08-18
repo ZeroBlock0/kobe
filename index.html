@@ -406,15 +406,26 @@
         });
 
         // ========== ✅ 新增：乱飞小广告逻辑 ==========
-        const flyingTribute = document.getElementById('flyingTribute');
-        const closeTribute = document.getElementById('closeTribute');
+        // 使用函数来获取元素，确保每次都能获取到最新的引用
+        function getFlyingTributeElements() {
+            return {
+                flyingTribute: document.getElementById('flyingTribute'),
+                closeTribute: document.getElementById('closeTribute')
+            };
+        }
+
         let vx = 2; // 水平速度
         let vy = 1.5; // 垂直速度
         let animationId;
 
         // 初始化位置（避免遮挡按钮）
         function setInitialPosition() {
-            if (!flyingTribute) return;
+            const { flyingTribute } = getFlyingTributeElements();
+            if (!flyingTribute) {
+                console.warn('flyingTribute element not found in setInitialPosition');
+                return;
+            }
+            
             const rect = flyingTribute.getBoundingClientRect();
             let left = Math.random() * (window.innerWidth - rect.width);
             let top = Math.random() * (window.innerHeight - rect.height);
@@ -431,10 +442,15 @@
 
         // 移动 + 碰撞检测
         function moveTribute() {
-            if (!flyingTribute) return;
+            const { flyingTribute } = getFlyingTributeElements();
+            if (!flyingTribute) {
+                console.warn('flyingTribute element not found in moveTribute');
+                return;
+            }
+            
             const rect = flyingTribute.getBoundingClientRect();
-            let left = parseFloat(flyingTribute.style.left);
-            let top = parseFloat(flyingTribute.style.top);
+            let left = parseFloat(flyingTribute.style.left) || 0;
+            let top = parseFloat(flyingTribute.style.top) || 0;
 
             left += vx;
             top += vy;
@@ -458,30 +474,73 @@
         }
 
         // 点击关闭
-        if (closeTribute) {
-            closeTribute.addEventListener('click', () => {
-                if (flyingTribute) flyingTribute.classList.remove('show');
-                setTimeout(() => {
-                    if (animationId) cancelAnimationFrame(animationId);
-                }, 300);
-            });
+        function setupCloseButton() {
+            const { closeTribute, flyingTribute } = getFlyingTributeElements();
+            if (closeTribute && flyingTribute) {
+                closeTribute.addEventListener('click', () => {
+                    console.log('Close button clicked');
+                    flyingTribute.classList.remove('show');
+                    console.log('flyingTribute hidden');
+                    
+                    setTimeout(() => {
+                        if (animationId) {
+                            cancelAnimationFrame(animationId);
+                            console.log('Animation cancelled');
+                        }
+                    }, 300);
+                });
+            } else {
+                console.warn('closeTribute or flyingTribute element not found. Make sure the DOM elements exist');
+            }
         }
 
         // 页面加载完成后延迟显示
         window.addEventListener('load', () => {
+            console.log('Window loaded event triggered');
+            
+            // 设置关闭按钮事件
+            setupCloseButton();
+            
             setTimeout(() => {
-                setInitialPosition();
-                if (flyingTribute) flyingTribute.classList.add('show');
-                moveTribute();
+                const { flyingTribute } = getFlyingTributeElements();
+                console.log('flyingTribute element status:', {
+                    exists: !!flyingTribute,
+                    classList: flyingTribute ? Array.from(flyingTribute.classList) : null
+                });
+                
+                if (flyingTribute) {
+                    console.log('Showing flyingTribute after 3s delay');
+                    setInitialPosition();
+                    flyingTribute.classList.add('show');
+                    console.log('flyingTribute displayed');
+                    moveTribute();
+                } else {
+                    console.error('flyingTribute element not found when trying to show');
+                }
             }, 3000); // 3秒后出现，不打扰初始体验
         });
 
         // 窗口大小改变时重置
         window.addEventListener('resize', () => {
+            const { flyingTribute } = getFlyingTributeElements();
             if (flyingTribute && flyingTribute.classList.contains('show')) {
                 if (animationId) cancelAnimationFrame(animationId);
                 setInitialPosition();
                 moveTribute();
+            }
+        });
+        
+        // DOM内容加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM content loaded');
+            // 确保元素引用是最新的
+            const { flyingTribute, closeTribute } = getFlyingTributeElements();
+            console.log('flyingTribute on DOMContentLoaded:', flyingTribute);
+            console.log('closeTribute on DOMContentLoaded:', closeTribute);
+            
+            // 尝试设置关闭按钮事件
+            if (closeTribute && flyingTribute) {
+                setupCloseButton();
             }
         });
     </script>
