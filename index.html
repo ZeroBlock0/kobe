@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <!-- ✅ 新增：移动端全屏支持 -->
+    <!-- 移动端全屏支持 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="format-detection" content="telephone=no">
@@ -90,7 +90,7 @@
             }
         }
 
-        /* 全屏提示（可选） */
+        /* 全屏提示 */
         .tap-hint {
             position: absolute;
             top: 0;
@@ -199,7 +199,7 @@
             margin-top: 8px;
         }
 
-        /* === 新增：乱飞小广告样式 === */
+        /* === 小广告 === */
         .flying-tribute {
             position: absolute;
             top: 20%;
@@ -253,7 +253,6 @@
 
 <body>
     <video id="kobeVideo" playsinline webkit-playsinline preload="auto">
-        <!-- 注意：去掉了 autoplay muted，我们通过JS控制 -->
         <source src="https://kobe.acgfans.online/api/video" type="video/mp4" />
         您的浏览器不支持视频播放。
     </video>
@@ -263,7 +262,6 @@
         <div class="loading-text">Loading<span class="dots"><span class="dot">.</span><span class="dot">.</span><span
                     class="dot">.</span></span></div>
     
-        <!-- ✅ 正确：进度条现在在 .loading 内部 -->
         <div class="progress-bar-outer">
             <div class="progress-bar-inner" id="progressBar"></div>
         </div>
@@ -322,7 +320,7 @@
         let isPlaying = false;
         let soundOn = false;
 
-        // ✅ 优化版 tryPlay()
+        //  tryPlay()
         const tryPlay = async () => {
             if (isPlaying) return;
             try {
@@ -330,7 +328,7 @@
                 isPlaying = true;
                 tapHint.classList.remove('show');
 
-                // 只有当当前是静音状态时，才在首次播放时开启声音
+                // 只有当前是静音状态时，才在首次播放时开启声音
                 if (video.muted) {
                     video.muted = false;
                     soundOn = true;
@@ -382,7 +380,7 @@
             }
         });
 
-        // ✅ 优化版 video click 事件
+        //  video click 事件
         video.addEventListener('click', () => {
             if (isPlaying) {
                 // 已播放时点击，切换声音
@@ -405,7 +403,7 @@
             video.play().catch(e => console.log('循环播放失败:', e));
         });
 
-        // ========== ✅ 新增：乱飞小广告逻辑 ==========
+        // ========== 小广告逻辑 ==========
         // 使用函数来获取元素，确保每次都能获取到最新的引用
         function getFlyingTributeElements() {
             return {
@@ -545,7 +543,7 @@
         });
     </script>
 
-    <!-- ✅ 新增：乱飞小广告 -->
+    <!-- 弹小广告 -->
     <div class="flying-tribute" id="flyingTribute">
         <div class="close-btn" id="closeTribute">×</div>
         Mamba Out.
