@@ -474,8 +474,8 @@
 
         // 窗口大小改变时重置
         window.addEventListener('resize', () => {
-            if (flyingTribute.classList.contains('show')) {
-                cancelAnimationFrame(animationId);
+            if (flyingTribute && flyingTribute.classList.contains('show')) {
+                if (animationId) cancelAnimationFrame(animationId);
                 setInitialPosition();
                 moveTribute();
             }
@@ -486,8 +486,10 @@
     <div class="flying-tribute" id="flyingTribute">
         <div class="close-btn" id="closeTribute">×</div>
         Mamba Out.
-    
-        But the Legacy Lives On. 🏀💫
+
+        But the Legacy Lives On.
+
+        And your tribute helps keep it alive. 🏀💫
     </div>
 </body>
 
