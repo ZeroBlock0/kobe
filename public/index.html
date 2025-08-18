@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- 移动端全屏支持 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <title>🫡Kobe 🏀 Tribute🫡</title>
+    <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+    <video id="kobeVideo" playsinline webkit-playsinline preload="auto">
+        <source src="https://kobe.acgfans.online/api/video" type="video/mp4" />
+        您的浏览器不支持视频播放。
+    </video>
+
+    <!-- Loading 动画 -->
+    <div class="loading" id="loading">
+        <div class="loading-text">Loading<span class="dots"><span class="dot">.</span><span class="dot">.</span><span
+                    class="dot">.</span></span></div>
+    
+        <div class="progress-bar-outer">
+            <div class="progress-bar-inner" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">0%</div>
+    </div>
+
+    <button id="soundButton" aria-label="开启声音">🔇</button>
+    <div class="hint">点击右上角按钮开启声音</div>
+    <div class="tap-hint" id="tapHint">轻触屏幕开始播放</div>
+
+    <script src="js/index.js"></script>
+
+    <!-- 弹小广告 -->
+    <div class="flying-tribute" id="flyingTribute">
+        <div class="close-btn" id="closeTribute">×</div>
+        Mamba Out.
+
+        But the Legacy Lives On.
+
+        And your tribute helps keep it alive. 🏀💫
+    </div>
+</body>
+
+</html>
