@@ -1,80 +1,87 @@
 /**
- * Pages Function: 从 R2 读取视频并流式返回
+ * Pages Function: 从 R2 流式返回视频（支持拖动）
+ * @see https://developers.cloudflare.com/pages/functions/api-reference/
  */
 export async function onRequestGet(context) {
-    const { env } = context;
-    const bucket = env.file; // 绑定的 R2 存储桶
-
-    const key = 'kobe.mp4'; // 视频在 R2 中的文件名
+    const { env, request } = context;
+    const bucket = env.file;
+    const key = 'kobe.mp4';
 
     try {
         const object = await bucket.get(key);
-
         if (!object) {
             return new Response('视频未找到', { status: 404 });
         }
 
-        // 构造响应头，支持视频流（如拖动进度条）
+        // 基础响应头
         const headers = new Headers();
-        object.writeHttpMetadata(headers);
+        object.writeHttpMetadata(headers); // 写入 R2 元数据（如 content-type）
         headers.set('content-type', 'video/mp4');
-        headers.set('cache-control', 'public, max-age=31536000, immutable'); // 长期缓存
+        headers.set('cache-control', 'public, max-age=31536000, immutable');
+        headers.set('accept-ranges', 'bytes');
 
-        // 支持范围请求（Range Requests），用于视频拖动
-        const { request } = context;
         const range = request.headers.get('range');
+        const fileSize = object.size;
+        const total = fileSize - 1;
 
-        if (range) {
-            const parts = range.replace(/bytes=/, "").split("-");
-            const start = parseInt(parts[0], 10);
-            const end = parts[1] ? parseInt(parts[1], 10) : object.size - 1;
-            const chunk = end - start + 1;
-
-            headers.set('content-range', `bytes ${start}-${end}/${object.size}`);
-            headers.set('content-length', chunk);
-            headers.set('status', '206');
-
-            // 使用正确的 TransformStream 实现
-            const transformStream = new TransformStream(createPipeRangeTransformer(start, end));
-            const body = object.body?.pipeThrough(transformStream);
-
-            return new Response(body, {
-                status: 206,
+        if (!range) {
+            // 全量请求
+            return new Response(object.body, {
+                status: 200,
                 headers
             });
         }
 
-        return new Response(object.body, {
-            status: 200,
+        // 解析 Range
+        const parts = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : total;
+
+        // 范围校验
+        if (start >= fileSize || start < 0 || end >= fileSize) {
+            return new Response(`请求范围无效: ${start}-${end}/${fileSize}`, {
+                status: 416,
+                headers: {
+                    'Content-Range': `bytes */${fileSize}`
+                }
+            });
+        }
+
+        // 设置 206 Partial Content 响应头
+        const chunkSize = (end - start) + 1;
+        headers.set('content-range', `bytes ${start}-${end}/${fileSize}`);
+        headers.set('content-length', chunkSize.toString());
+
+        // ✅ 正确创建 TransformStream（官方推荐模式）
+        const { readable, writable } = new TransformStream({
+            transform(chunk, controller) {
+                const buffer = chunk;
+                const chunkStart = start <= (total - buffer.byteLength + 1)
+                    ? Math.max(0, start - bytesSent)
+                    : 0;
+                const chunkEnd = Math.min(buffer.byteLength, end - bytesSent + 1);
+
+                if (chunkStart < chunkEnd) {
+                    controller.enqueue(buffer.slice(chunkStart, chunkEnd));
+                }
+
+                bytesSent += buffer.byteLength;
+
+                if (bytesSent > end) {
+                    controller.terminate();
+                }
+            }
+        });
+
+        let bytesSent = 0;
+        object.body?.pipeTo(writable); // 将 R2 流写入 TransformStream
+
+        return new Response(readable, {
+            status: 206,
             headers
         });
 
     } catch (err) {
         return new Response('服务器错误: ' + err.message, { status: 500 });
     }
-}
-
-// 创建 transformer 对象的函数
-function createPipeRangeTransformer(start, end) {
-    let bytesSent = 0;
-
-    return {
-        transform(chunk, controller) {
-            const buffer = chunk;
-            const chunkStart = bytesSent < start ? start - bytesSent : 0;
-            const availableBytes = buffer.byteLength;
-            const maxBytesToTake = end - start + 1 - bytesSent;
-            const chunkEnd = Math.min(chunkStart + maxBytesToTake, availableBytes);
-
-            if (chunkEnd > chunkStart) {
-                controller.enqueue(buffer.slice(chunkStart, chunkEnd));
-            }
-
-            bytesSent += availableBytes;
-
-            if (bytesSent > end) {
-                controller.terminate();
-            }
-        }
-    };
 }
