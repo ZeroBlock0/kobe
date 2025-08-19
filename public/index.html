@@ -4,15 +4,19 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" href="https://kobe.acgfans.online/css/index.css">
+    <!-- 预加载JavaScript资源 -->
+    <link rel="preload" href="https://kobe.acgfans.online/js/index.js" as="script">
     <!-- 移动端全屏支持 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="format-detection" content="telephone=no">
     <title>🫡Kobe 🏀 Tribute🫡</title>
-    <link rel="stylesheet" href="https://kobe.acgfans.online/css/index.css">
 </head>
 
 <body>
+    <script src="https://kobe.acgfans.online/js/index.js"></script>
+    
     <video id="kobeVideo" playsinline webkit-playsinline preload="auto">
         <source src="https://kobe.acgfans.online/api/video" type="video/mp4" />
         您的浏览器不支持视频播放。
@@ -32,8 +36,6 @@
     <button id="soundButton" aria-label="开启声音">🔇</button>
     <div class="hint">点击右上角按钮开启声音</div>
     <div class="tap-hint" id="tapHint">轻触屏幕开始播放</div>
-
-    <script src="https://kobe.acgfans.online/js/index.js"></script>
 
     <!-- 弹小广告 -->
     <div class="flying-tribute" id="flyingTribute">
