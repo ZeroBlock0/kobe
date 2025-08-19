@@ -1,18 +1,9 @@
 # 为所有静态资源设置 CORS 头
 /*
-  Access-Control-Allow-Origin: https://docker3.acgfans.online
-  Access-Control-Allow-Origin: https://cf-workers-docker-io-emi.pages.dev
-  Access-Control-Allow-Origin: https://kobe.acgfans.online
-  Access-Control-Allow-Origin: https://kobe-3ij.pages.dev
+  Access-Control-Allow-Origin: *
 
 /css/*
-  Access-Control-Allow-Origin: https://docker3.acgfans.online
-  Access-Control-Allow-Origin: https://cf-workers-docker-io-emi.pages.dev
-  Access-Control-Allow-Origin: https://kobe.acgfans.online
-  Access-Control-Allow-Origin: https://kobe-3ij.pages.dev
+  Access-Control-Allow-Origin: *
 
 /js/*
-  Access-Control-Allow-Origin: https://docker3.acgfans.online
-  Access-Control-Allow-Origin: https://cf-workers-docker-io-emi.pages.dev
-  Access-Control-Allow-Origin: https://kobe.acgfans.online
-  Access-Control-Allow-Origin: https://kobe-3ij.pages.dev
+  Access-Control-Allow-Origin: *
