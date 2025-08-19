@@ -27,8 +27,22 @@ export async function onRequestGet(context) {
         headers.set('accept-ranges', 'bytes');
 
         // === 跨域 CORS 设置 ===
-        // 允许所有域访问，增强兼容性
-        headers.set('Access-Control-Allow-Origin', '*');
+        const allowedOrigins = [
+            'https://docker3.acgfans.online',
+            'https://cf-workers-docker-io-emi.pages.dev',
+            'https://kobe.acgfans.online',
+            'https://kobe-3ij.pages.dev'
+        ];
+
+        const requestOrigin = request.headers.get('Origin');
+
+        // 只有匹配的域名才返回 Access-Control-Allow-Origin
+        if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+            headers.set('Access-Control-Allow-Origin', requestOrigin);
+        } else if (!requestOrigin) {
+            // 如果没有 Origin 头，允许所有域访问
+            headers.set('Access-Control-Allow-Origin', '*');
+        }
 
         // === 关键：确保 Vary 包含 Origin，防止 CDN 缓存污染 ===
         const existingVary = headers.get('Vary') || '';
