@@ -2,6 +2,10 @@ name = "kobe"
 compatibility_date = "2025-08-18"
 pages_build_output_dir = "./public"
 
+# R2 存储桶绑定配置
+# 这个配置告诉 Cloudflare：将名为 "storage" 的 R2 存储桶绑定到代码中的 env.file 变量
+# 在 Functions 代码中可以通过 env.file 直接访问这个 R2 存储桶
+# 无需配置 URL、密钥等信息，Cloudflare 自动处理认证和连接
 [[r2_buckets]]
-binding = "file"
-bucket_name = "storage"
+binding = "file"        # 绑定名称，在代码中通过 env.file 访问
+bucket_name = "storage" # 实际的 R2 存储桶名称

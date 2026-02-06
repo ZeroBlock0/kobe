@@ -1,9 +1,17 @@
 /**
  * Pages Function: 从 R2 流式返回视频（支持拖动 + 跨域）
  * 支持 Range 请求，正确设置 CORS 与 Vary 头
+ * 
+ * R2 存储桶绑定说明：
+ * - 在 wrangler.toml 中配置了 R2 绑定: binding = "file", bucket_name = "storage"
+ * - Cloudflare 自动将 R2 存储桶注入到 env.file 变量中
+ * - 不需要配置 URL、密钥或端点，所有认证和连接信息都由 Cloudflare 自动处理
+ * - env.file 是一个完整的 R2 客户端对象，可直接调用 get/put/delete 等方法
  */
 export async function onRequestGet(context) {
     const { env, request } = context;
+    // env.file 是通过 wrangler.toml 中的 binding = "file" 配置自动注入的 R2 存储桶客户端
+    // 对应的存储桶名称是 "storage"，Cloudflare 自动处理所有认证和路由
     const bucket = env.file;
     const key = 'kobe.mp4';
 
