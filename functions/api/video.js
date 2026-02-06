@@ -31,7 +31,8 @@ export async function onRequestGet(context) {
             'https://docker3.acgfans.online',
             'https://cf-workers-docker-io-emi.pages.dev',
             'https://kobe.acgfans.online',
-            'https://kobe-3ij.pages.dev'
+            'https://kobe-3ij.pages.dev',
+            'https://kobe.0b05.com'
         ];
 
         const requestOrigin = request.headers.get('Origin');
